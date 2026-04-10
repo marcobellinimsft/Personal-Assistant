@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marco's Personal Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Neon Bar -->
+        <header class="top-bar">
+            <div class="neon-links">
+                <a href="https://msit.powerbi.com/groups/me/apps/70f54bbb-4c7f-4d8d-b7e5-969829116cc6/reports/68fad35f-af18-4843-8349-0b0374d9f95b?ctid=72f988bf-86f1-41af-91ab-2d7cd011db47&experience=power-bi" target="_blank" class="neon-btn neon-cyan">
+                    <span class="material-icons">dashboard</span> Dashboard
+                </a>
+                <a href="#" class="neon-btn neon-pink" onclick="showPage('tasks'); return false;">
+                    <span class="material-icons">task_alt</span> Tasks To Do
+                </a>
+                <a href="#" class="neon-btn neon-green" onclick="showPage('hero-products'); return false;">
+                    <span class="material-icons">star</span> Hero Products
+                </a>
+            </div>
+            <div class="app-title">Marco's Assistant</div>
+        </header>
+
+        <div class="main-layout">
+            <!-- Main Content Area -->
+            <main class="content-area" id="content-area">
+                <!-- Welcome Page -->
+                <div class="page active" id="page-welcome">
+                    <h1>Welcome, Marco</h1>
+                    <p class="subtitle">Your personal command center. Use the sidebar for quick links or the neon bar above for key tools.</p>
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <span class="material-icons">task_alt</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-tasks">0</span>
+                                <span class="stat-label">Open Tasks</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons">event</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-events-1p">0</span>
+                                <span class="stat-label">1P Events</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons">groups</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-events-3p">0</span>
+                                <span class="stat-label">3P Events</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="material-icons">inventory_2</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-products">14</span>
+                                <span class="stat-label">Hero Products</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Page -->
+                <div class="page" id="page-tasks">
+                    <div class="page-header">
+                        <h1><span class="material-icons">task_alt</span> Tasks To Do</h1>
+                        <button class="btn-add" onclick="addTask()"><span class="material-icons">add</span> Add Task</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="tasks-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="name">Task Name <span class="sort-icon">↕</span></th>
+                                    <th data-sort="who">Who Is It For <span class="sort-icon">↕</span></th>
+                                    <th data-sort="date">Date Due <span class="sort-icon">↕</span></th>
+                                    <th data-sort="link">Useful Link</th>
+                                    <th data-sort="vendor">Vendor Support</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasks-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hero Products Page -->
+                <div class="page" id="page-hero-products">
+                    <div class="page-header">
+                        <h1><span class="material-icons">star</span> Hero Products</h1>
+                    </div>
+                    <div class="products-grid" id="products-grid"></div>
+                </div>
+
+                <!-- Product Detail Page -->
+                <div class="page" id="page-product-detail">
+                    <div class="page-header">
+                        <button class="btn-back" onclick="showPage('hero-products')"><span class="material-icons">arrow_back</span> Back to Products</button>
+                        <h1 id="product-detail-title"></h1>
+                    </div>
+                    <div class="product-detail-content" id="product-detail-content"></div>
+                </div>
+
+                <!-- 1P Events Page -->
+                <div class="page" id="page-1p-events">
+                    <div class="page-header">
+                        <h1><span class="material-icons">event</span> 1P Events</h1>
+                        <button class="btn-add" onclick="addEvent('1p')"><span class="material-icons">add</span> Add Event</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="events-1p-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="date">Date <span class="sort-icon">↕</span></th>
+                                    <th data-sort="name">Event Name <span class="sort-icon">↕</span></th>
+                                    <th data-sort="hero">Hero Product <span class="sort-icon">↕</span></th>
+                                    <th data-sort="pmm">PMM</th>
+                                    <th data-sort="contact">Marketing Contact</th>
+                                    <th data-sort="plan">Plan of Record</th>
+                                    <th data-sort="activity">Marketing Activity</th>
+                                    <th data-sort="notes">Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-1p-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3P Events Page -->
+                <div class="page" id="page-3p-events">
+                    <div class="page-header">
+                        <h1><span class="material-icons">groups</span> 3P Events</h1>
+                        <button class="btn-add" onclick="addEvent('3p')"><span class="material-icons">add</span> Add Event</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="events-3p-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="date">Date <span class="sort-icon">↕</span></th>
+                                    <th data-sort="name">Event Name <span class="sort-icon">↕</span></th>
+                                    <th data-sort="hero">Hero Product <span class="sort-icon">↕</span></th>
+                                    <th data-sort="pmm">PMM</th>
+                                    <th data-sort="contact">Marketing Contact</th>
+                                    <th data-sort="plan">Plan of Record</th>
+                                    <th data-sort="activity">Marketing Activity</th>
+                                    <th data-sort="notes">Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-3p-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Useful Links -->
+            <aside class="sidebar">
+                <h2 class="sidebar-title">Useful Links</h2>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">school</span> Skilling VTeam
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body open">
+                        <a href="#" target="_blank" class="sidebar-link">Leadership Walking Deck</a>
+                        <a href="#" target="_blank" class="sidebar-link">Loop</a>
+                        <a href="https://github.com/akiyaani2/azure-solutions-skilling" target="_blank" class="sidebar-link">GitHub Skilling Site</a>
+                        <a href="#" target="_blank" class="sidebar-link">Skilling SharePoint</a>
+                        <a href="#" target="_blank" class="sidebar-link">Skilling Funnel</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">assessment</span> ROB
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">MMR</a>
+                        <a href="#" target="_blank" class="sidebar-link">Takeshi Updates</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">account_tree</span> Org Chart
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Commercial Cloud & AI Marketing Org Chart</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">edit_calendar</span> Planning
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Current Plan XLS</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Planning Greenlight One Pager</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats Tracker</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">cloud</span> M&amp;M Skilling
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Landing Page</a>
+                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/" target="_blank" class="sidebar-link">Microsoft Learn</a>
+                        <a href="#" target="_blank" class="sidebar-link">VTD - Virtual Training Days</a>
+                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/challenges" target="_blank" class="sidebar-link">Challenges</a>
+                        <a href="#" target="_blank" class="sidebar-link">Reactor Channel</a>
+                        <a href="#" target="_blank" class="sidebar-link">Blog Opportunities</a>
+                        <a href="#" onclick="showPage('1p-events'); return false;" class="sidebar-link">1P Events</a>
+                        <a href="#" onclick="showPage('3p-events'); return false;" class="sidebar-link">3P Events</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">lightbulb</span> Other Projects
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Mentoring - CC&AI Mentorship Guide</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">business</span> Corp Useful
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="https://msit.powerbi.com/groups/me/reports/63620602-8a32-417d-bc33-65dc73e93db4?ctid=72f988bf-86f1-41af-91ab-2d7cd011db47&pbi_source=linkShare&bookmarkGuid=bc8c6d0a-da77-4a16-b859-a191c3c8d68e" target="_blank" class="sidebar-link">In Office Profile</a>
+                        <a href="#" target="_blank" class="sidebar-link">Glossary</a>
+                        <a href="#" target="_blank" class="sidebar-link">Free Things!</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">person</span> Personal
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="https://uw-ta.onrender.com/" target="_blank" class="sidebar-link">UW-TA</a>
+                        <a href="#" target="_blank" class="sidebar-link">Kronoscript</a>
+                        <a href="#" target="_blank" class="sidebar-link">Canvas</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
