@@ -469,6 +469,22 @@ function debounceSave(key, data) {
     autoSaveTimers[key] = setTimeout(() => saveData(key, data), 500);
 }
 
+// ===== Open in Browser =====
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('#open-in-browser');
+    if (link) {
+        e.preventDefault();
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            const orig = link.innerHTML;
+            link.innerHTML = '<span class="material-icons">check</span> URL Copied!';
+            setTimeout(() => { link.innerHTML = orig; }, 2000);
+        }).catch(() => {
+            prompt('Copy this URL to open in your browser:', url);
+        });
+    }
+});
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
     // Open first sidebar group
