@@ -485,7 +485,7 @@ tbody td textarea:hover {
     width: 300px;
     min-width: 300px;
     background: var(--bg-sidebar);
-    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
     padding: 20px 0;
     overflow-y: auto;
     height: calc(100vh - 65px);

@@ -32,6 +32,110 @@
         </header>
 
         <div class="main-layout">
+            <!-- Left Sidebar - Useful Links -->
+            <aside class="sidebar">
+                <h2 class="sidebar-title">Useful Links</h2>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">school</span> Skilling VTeam
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body open">
+                        <a href="#" target="_blank" class="sidebar-link">Leadership Walking Deck</a>
+                        <a href="#" target="_blank" class="sidebar-link">Loop</a>
+                        <a href="https://github.com/akiyaani2/azure-solutions-skilling" target="_blank" class="sidebar-link">GitHub Skilling Site</a>
+                        <a href="#" target="_blank" class="sidebar-link">Skilling SharePoint</a>
+                        <a href="#" target="_blank" class="sidebar-link">Skilling Funnel</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">assessment</span> ROB
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">MMR</a>
+                        <a href="#" target="_blank" class="sidebar-link">Takeshi Updates</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">account_tree</span> Org Chart
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Commercial Cloud &amp; AI Marketing Org Chart</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">edit_calendar</span> Planning
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Current Plan XLS</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Planning Greenlight One Pager</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats</a>
+                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats Tracker</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">cloud</span> M&amp;M Skilling
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Landing Page</a>
+                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/" target="_blank" class="sidebar-link">Microsoft Learn</a>
+                        <a href="#" target="_blank" class="sidebar-link">VTD - Virtual Training Days</a>
+                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/challenges" target="_blank" class="sidebar-link">Challenges</a>
+                        <a href="#" target="_blank" class="sidebar-link">Reactor Channel</a>
+                        <a href="#" target="_blank" class="sidebar-link">Blog Opportunities</a>
+                        <a href="#" onclick="showPage('1p-events'); return false;" class="sidebar-link">1P Events</a>
+                        <a href="#" onclick="showPage('3p-events'); return false;" class="sidebar-link">3P Events</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">lightbulb</span> Other Projects
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="#" target="_blank" class="sidebar-link">Mentoring - CC&amp;AI Mentorship Guide</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">business</span> Corp Useful
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="https://msit.powerbi.com/groups/me/reports/63620602-8a32-417d-bc33-65dc73e93db4?ctid=72f988bf-86f1-41af-91ab-2d7cd011db47&amp;pbi_source=linkShare&amp;bookmarkGuid=bc8c6d0a-da77-4a16-b859-a191c3c8d68e" target="_blank" class="sidebar-link">In Office Profile</a>
+                        <a href="#" target="_blank" class="sidebar-link">Glossary</a>
+                        <a href="#" target="_blank" class="sidebar-link">Free Things!</a>
+                    </div>
+                </div>
+
+                <div class="link-group">
+                    <div class="link-group-header" onclick="toggleGroup(this)">
+                        <span class="material-icons">person</span> Personal
+                        <span class="material-icons chevron">expand_more</span>
+                    </div>
+                    <div class="link-group-body">
+                        <a href="https://uw-ta.onrender.com/" target="_blank" class="sidebar-link">UW-TA</a>
+                        <a href="#" target="_blank" class="sidebar-link">Kronoscript</a>
+                        <a href="#" target="_blank" class="sidebar-link">Canvas</a>
+                    </div>
+                </div>
+            </aside>
+
             <!-- Main Content Area -->
             <main class="content-area" id="content-area">
                 <!-- Welcome Page -->
@@ -162,110 +266,6 @@
                     </div>
                 </div>
             </main>
-
-            <!-- Right Sidebar - Useful Links -->
-            <aside class="sidebar">
-                <h2 class="sidebar-title">Useful Links</h2>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">school</span> Skilling VTeam
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body open">
-                        <a href="#" target="_blank" class="sidebar-link">Leadership Walking Deck</a>
-                        <a href="#" target="_blank" class="sidebar-link">Loop</a>
-                        <a href="https://github.com/akiyaani2/azure-solutions-skilling" target="_blank" class="sidebar-link">GitHub Skilling Site</a>
-                        <a href="#" target="_blank" class="sidebar-link">Skilling SharePoint</a>
-                        <a href="#" target="_blank" class="sidebar-link">Skilling Funnel</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">assessment</span> ROB
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="#" target="_blank" class="sidebar-link">MMR</a>
-                        <a href="#" target="_blank" class="sidebar-link">Takeshi Updates</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">account_tree</span> Org Chart
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="#" target="_blank" class="sidebar-link">Commercial Cloud & AI Marketing Org Chart</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">edit_calendar</span> Planning
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="#" target="_blank" class="sidebar-link">Current Plan XLS</a>
-                        <a href="#" target="_blank" class="sidebar-link">FY27 Planning Greenlight One Pager</a>
-                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats</a>
-                        <a href="#" target="_blank" class="sidebar-link">FY27 Placemats Tracker</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">cloud</span> M&amp;M Skilling
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="#" target="_blank" class="sidebar-link">Landing Page</a>
-                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/" target="_blank" class="sidebar-link">Microsoft Learn</a>
-                        <a href="#" target="_blank" class="sidebar-link">VTD - Virtual Training Days</a>
-                        <a href="https://learn.microsoft.com/en-us/users/marcobellini-8438/challenges" target="_blank" class="sidebar-link">Challenges</a>
-                        <a href="#" target="_blank" class="sidebar-link">Reactor Channel</a>
-                        <a href="#" target="_blank" class="sidebar-link">Blog Opportunities</a>
-                        <a href="#" onclick="showPage('1p-events'); return false;" class="sidebar-link">1P Events</a>
-                        <a href="#" onclick="showPage('3p-events'); return false;" class="sidebar-link">3P Events</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">lightbulb</span> Other Projects
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="#" target="_blank" class="sidebar-link">Mentoring - CC&AI Mentorship Guide</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">business</span> Corp Useful
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="https://msit.powerbi.com/groups/me/reports/63620602-8a32-417d-bc33-65dc73e93db4?ctid=72f988bf-86f1-41af-91ab-2d7cd011db47&pbi_source=linkShare&bookmarkGuid=bc8c6d0a-da77-4a16-b859-a191c3c8d68e" target="_blank" class="sidebar-link">In Office Profile</a>
-                        <a href="#" target="_blank" class="sidebar-link">Glossary</a>
-                        <a href="#" target="_blank" class="sidebar-link">Free Things!</a>
-                    </div>
-                </div>
-
-                <div class="link-group">
-                    <div class="link-group-header" onclick="toggleGroup(this)">
-                        <span class="material-icons">person</span> Personal
-                        <span class="material-icons chevron">expand_more</span>
-                    </div>
-                    <div class="link-group-body">
-                        <a href="https://uw-ta.onrender.com/" target="_blank" class="sidebar-link">UW-TA</a>
-                        <a href="#" target="_blank" class="sidebar-link">Kronoscript</a>
-                        <a href="#" target="_blank" class="sidebar-link">Canvas</a>
-                    </div>
-                </div>
-            </aside>
         </div>
     </div>
 
