@@ -1,6 +1,7 @@
 // ===== Data Store =====
 const STORAGE_KEYS = {
     tasks: 'pa_tasks',
+    archivedTasks: 'pa_tasks_archived',
     events1p: 'pa_events_1p',
     events3p: 'pa_events_3p',
     products: 'pa_products'
@@ -71,6 +72,7 @@ const DEFAULT_PRODUCTS = [
 
 // ===== State =====
 let tasks = loadData(STORAGE_KEYS.tasks, DEFAULT_TASKS);
+let archivedTasks = loadData(STORAGE_KEYS.archivedTasks, []);
 let events1p = loadData(STORAGE_KEYS.events1p, DEFAULT_EVENTS_1P);
 let events3p = loadData(STORAGE_KEYS.events3p, DEFAULT_EVENTS_3P);
 let products = loadData(STORAGE_KEYS.products, DEFAULT_PRODUCTS);
@@ -103,6 +105,7 @@ function renderTasks() {
     tasks.forEach((task, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="col-check"><input type="checkbox" class="task-checkbox" onchange="completeTask(${idx})" title="Mark complete"></td>
             <td><input type="text" value="${esc(task.name)}" placeholder="Task name..." onchange="updateTask(${idx},'name',this.value)"></td>
             <td><input type="text" value="${esc(task.who)}" placeholder="Person..." onchange="updateTask(${idx},'who',this.value)"></td>
             <td><input type="date" value="${esc(task.date)}" onchange="updateTask(${idx},'date',this.value)"></td>
@@ -113,6 +116,91 @@ function renderTasks() {
         tbody.appendChild(tr);
     });
     updateStats();
+    renderArchivedToggle();
+}
+
+function completeTask(idx) {
+    const task = tasks.splice(idx, 1)[0];
+    task.completedDate = new Date().toISOString().split('T')[0];
+    archivedTasks.unshift(task);
+    saveData(STORAGE_KEYS.tasks, tasks);
+    saveData(STORAGE_KEYS.archivedTasks, archivedTasks);
+    renderTasks();
+}
+
+function resumeTask(idx) {
+    const task = archivedTasks.splice(idx, 1)[0];
+    delete task.completedDate;
+    tasks.push(task);
+    saveData(STORAGE_KEYS.tasks, tasks);
+    saveData(STORAGE_KEYS.archivedTasks, archivedTasks);
+    renderTasks();
+}
+
+function deleteArchivedTask(idx) {
+    archivedTasks.splice(idx, 1);
+    saveData(STORAGE_KEYS.archivedTasks, archivedTasks);
+    renderTasks();
+}
+
+function renderArchivedToggle() {
+    let section = document.getElementById('archived-section');
+    if (!section) {
+        section = document.createElement('div');
+        section.id = 'archived-section';
+        document.getElementById('page-tasks').appendChild(section);
+    }
+    if (archivedTasks.length === 0) {
+        section.innerHTML = '';
+        return;
+    }
+    section.innerHTML = `
+        <button class="btn-archived-toggle" onclick="toggleArchived()">
+            <span class="material-icons-outlined">archive</span>
+            Archived (${archivedTasks.length})
+            <span class="material-icons-outlined chevron-arch" id="arch-chevron">expand_more</span>
+        </button>
+        <div class="archived-table-wrap" id="archived-table-wrap">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task Name</th>
+                            <th>Who</th>
+                            <th>Date Due</th>
+                            <th>Completed</th>
+                            <th>Link</th>
+                            <th>Vendor</th>
+                            <th class="col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${archivedTasks.map((t, i) => `
+                            <tr class="archived-row">
+                                <td>${esc(t.name)}</td>
+                                <td>${esc(t.who)}</td>
+                                <td>${esc(t.date)}</td>
+                                <td><span class="completed-badge">${esc(t.completedDate)}</span></td>
+                                <td>${esc(t.link)}</td>
+                                <td>${esc(t.vendor)}</td>
+                                <td>
+                                    <button class="btn-resume" onclick="resumeTask(${i})" title="Resume task"><span class="material-icons-outlined">replay</span></button>
+                                    <button class="btn-delete" onclick="deleteArchivedTask(${i})" title="Delete"><span class="material-icons-outlined">delete</span></button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function toggleArchived() {
+    const wrap = document.getElementById('archived-table-wrap');
+    const chevron = document.getElementById('arch-chevron');
+    wrap.classList.toggle('open');
+    chevron.style.transform = wrap.classList.contains('open') ? 'rotate(180deg)' : '';
 }
 
 function addTask() {
