@@ -63,6 +63,17 @@ body {
 }
 .neon-btn .material-icons-outlined { font-size: 17px; }
 
+.neon-btn.neon-home {
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+}
+.neon-btn.neon-home:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-1px);
+}
+
 .neon-btn.neon-cyan {
     color: var(--neon-cyan);
     border-color: var(--neon-cyan);
