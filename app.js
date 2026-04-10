@@ -10,50 +10,38 @@ function loadData(key, defaults) {
     try {
         const saved = localStorage.getItem(key);
         return saved ? JSON.parse(saved) : defaults;
-    } catch {
-        return defaults;
-    }
+    } catch { return defaults; }
 }
 
 function saveData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
 
-// ===== Default Data =====
-const DEFAULT_TASKS = [
-    {
-        id: Date.now(),
-        name: 'Official landing page',
-        who: 'Mindy Bomonti',
-        date: getNextFriday(),
-        link: '',
-        vendor: ''
-    },
-    {
-        id: Date.now() + 1,
-        name: 'Playlist 5',
-        who: 'Larry Larsen',
-        date: getNextFriday(),
-        link: 'CAIP Marketing Planning Greenlight .pptx',
-        vendor: ''
-    },
-    {
-        id: Date.now() + 2,
-        name: '',
-        who: 'Mindy Bomonti',
-        date: '',
-        link: '',
-        vendor: ''
-    }
-];
-
+// ===== Helpers =====
 function getNextFriday() {
     const d = new Date();
-    const day = d.getDay();
-    const diff = (5 - day + 7) % 7 || 7;
+    const diff = (5 - d.getDay() + 7) % 7 || 7;
     d.setDate(d.getDate() + diff);
     return d.toISOString().split('T')[0];
 }
+
+function esc(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let autoSaveTimers = {};
+function debounceSave(key, data) {
+    clearTimeout(autoSaveTimers[key]);
+    autoSaveTimers[key] = setTimeout(() => saveData(key, data), 400);
+}
+
+// ===== Default Data =====
+const DEFAULT_TASKS = [
+    { id: 1, name: 'Official landing page', who: 'Mindy Bomonti', date: getNextFriday(), link: '', vendor: '' },
+    { id: 2, name: 'Playlist 5', who: 'Larry Larsen', date: getNextFriday(), link: 'CAIP Marketing Planning Greenlight .pptx', vendor: '' },
+    { id: 3, name: '', who: 'Mindy Bomonti', date: '', link: '', vendor: '' }
+];
 
 const DEFAULT_EVENTS_1P = [
     { id: 1, date: '2026-05-15', name: 'M&M Summit - Spring', hero: 'Azure Arc', pmm: '', contact: '', plan: '', activity: '', notes: '' },
@@ -65,90 +53,20 @@ const DEFAULT_EVENTS_1P = [
 const DEFAULT_EVENTS_3P = [];
 
 const DEFAULT_PRODUCTS = [
-    {
-        name: 'App Modernization (AKS, App Service)',
-        pmm: 'Mike Weber, Ashley Adelberg, Mayunk Jain',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Windows Server',
-        pmm: 'Jennifer Yuan',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'SQL Server',
-        pmm: 'Debbi Lyons, Govanna Flores',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure SQL',
-        pmm: 'Govanna Flores',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Defender for Cloud',
-        pmm: 'Shirleyse Haley',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure VMware Solution',
-        pmm: 'Kirsten Megahan, Britney Cretella',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure Arc',
-        pmm: 'Jyoti Sharma, Antonio Ortoll',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure CoPilot',
-        pmm: 'Jyoti Sharma, Antonio Ortoll, Arti Gulwadi',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Linux',
-        pmm: 'Enrico Fuiano, Naga Surendran',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Security',
-        pmm: 'Shirleyse Haley, Molina Sharma, Sean Whalen',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure Database for PostgreSQL',
-        pmm: 'Pooja Yarabothu, Teneil Lawrence',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Azure MySQL',
-        pmm: 'Teneil Lawrence, Pooja Yarabothu',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'Oracle',
-        pmm: 'Alex Stairs, Sparsh Agrawat',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    },
-    {
-        name: 'SAP on Azure',
-        pmm: 'Ankita Bhalla, Sanjay Satheesh',
-        pmmManager: '', sme: '', globalSkilling: '',
-        updates: [], events: []
-    }
+    { name: 'App Modernization (AKS, App Service)', pmm: 'Mike Weber, Ashley Adelberg, Mayunk Jain', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Windows Server', pmm: 'Jennifer Yuan', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'SQL Server', pmm: 'Debbi Lyons, Govanna Flores', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure SQL', pmm: 'Govanna Flores', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Defender for Cloud', pmm: 'Shirleyse Haley', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure VMware Solution', pmm: 'Kirsten Megahan, Britney Cretella', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure Arc', pmm: 'Jyoti Sharma, Antonio Ortoll', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure CoPilot', pmm: 'Jyoti Sharma, Antonio Ortoll, Arti Gulwadi', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Linux', pmm: 'Enrico Fuiano, Naga Surendran', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Security', pmm: 'Shirleyse Haley, Molina Sharma, Sean Whalen', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure Database for PostgreSQL', pmm: 'Pooja Yarabothu, Teneil Lawrence', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Azure MySQL', pmm: 'Teneil Lawrence, Pooja Yarabothu', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'Oracle', pmm: 'Alex Stairs, Sparsh Agrawat', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] },
+    { name: 'SAP on Azure', pmm: 'Ankita Bhalla, Sanjay Satheesh', pmmManager: '', sme: '', globalSkilling: '', updates: [], events: [] }
 ];
 
 // ===== State =====
@@ -157,8 +75,6 @@ let events1p = loadData(STORAGE_KEYS.events1p, DEFAULT_EVENTS_1P);
 let events3p = loadData(STORAGE_KEYS.events3p, DEFAULT_EVENTS_3P);
 let products = loadData(STORAGE_KEYS.products, DEFAULT_PRODUCTS);
 let currentSort = { table: null, column: null, dir: 'asc' };
-let currentProduct = null;
-let autoSaveTimers = {};
 
 // ===== Page Navigation =====
 function showPage(pageId) {
@@ -170,14 +86,14 @@ function showPage(pageId) {
         if (pageId === 'hero-products') renderProducts();
         if (pageId === '1p-events') renderEvents('1p');
         if (pageId === '3p-events') renderEvents('3p');
+        if (pageId === 'welcome') updateStats();
     }
 }
 
 // ===== Sidebar Toggle =====
 function toggleGroup(el) {
     el.classList.toggle('collapsed');
-    const body = el.nextElementSibling;
-    body.classList.toggle('open');
+    el.nextElementSibling.classList.toggle('open');
 }
 
 // ===== Tasks =====
@@ -187,12 +103,12 @@ function renderTasks() {
     tasks.forEach((task, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" value="${esc(task.name)}" data-field="name" data-idx="${idx}" onchange="updateTask(${idx}, 'name', this.value)"></td>
-            <td><input type="text" value="${esc(task.who)}" data-field="who" data-idx="${idx}" onchange="updateTask(${idx}, 'who', this.value)"></td>
-            <td><input type="date" value="${esc(task.date)}" data-field="date" data-idx="${idx}" onchange="updateTask(${idx}, 'date', this.value)"></td>
-            <td><input type="text" value="${esc(task.link)}" data-field="link" data-idx="${idx}" onchange="updateTask(${idx}, 'link', this.value)"></td>
-            <td><input type="text" value="${esc(task.vendor)}" data-field="vendor" data-idx="${idx}" onchange="updateTask(${idx}, 'vendor', this.value)"></td>
-            <td><button class="btn-delete" onclick="deleteTask(${idx})" title="Delete"><span class="material-icons">delete</span></button></td>
+            <td><input type="text" value="${esc(task.name)}" placeholder="Task name..." onchange="updateTask(${idx},'name',this.value)"></td>
+            <td><input type="text" value="${esc(task.who)}" placeholder="Person..." onchange="updateTask(${idx},'who',this.value)"></td>
+            <td><input type="date" value="${esc(task.date)}" onchange="updateTask(${idx},'date',this.value)"></td>
+            <td><input type="text" value="${esc(task.link)}" placeholder="Link..." onchange="updateTask(${idx},'link',this.value)"></td>
+            <td><input type="text" value="${esc(task.vendor)}" placeholder="Vendor..." onchange="updateTask(${idx},'vendor',this.value)"></td>
+            <td><button class="btn-delete" onclick="deleteTask(${idx})" title="Delete"><span class="material-icons-outlined">delete</span></button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -203,7 +119,6 @@ function addTask() {
     tasks.push({ id: Date.now(), name: '', who: '', date: '', link: '', vendor: '' });
     saveData(STORAGE_KEYS.tasks, tasks);
     renderTasks();
-    // Focus new row
     const inputs = document.querySelectorAll('#tasks-body tr:last-child input');
     if (inputs.length) inputs[0].focus();
 }
@@ -227,15 +142,15 @@ function renderEvents(type) {
     data.forEach((ev, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="date" value="${esc(ev.date)}" onchange="updateEvent('${type}', ${idx}, 'date', this.value)"></td>
-            <td><input type="text" value="${esc(ev.name)}" onchange="updateEvent('${type}', ${idx}, 'name', this.value)"></td>
-            <td><input type="text" value="${esc(ev.hero)}" onchange="updateEvent('${type}', ${idx}, 'hero', this.value)"></td>
-            <td><input type="text" value="${esc(ev.pmm)}" onchange="updateEvent('${type}', ${idx}, 'pmm', this.value)"></td>
-            <td><input type="text" value="${esc(ev.contact)}" onchange="updateEvent('${type}', ${idx}, 'contact', this.value)"></td>
-            <td><input type="text" value="${esc(ev.plan)}" onchange="updateEvent('${type}', ${idx}, 'plan', this.value)"></td>
-            <td><input type="text" value="${esc(ev.activity)}" onchange="updateEvent('${type}', ${idx}, 'activity', this.value)"></td>
-            <td><textarea rows="1" onchange="updateEvent('${type}', ${idx}, 'notes', this.value)">${esc(ev.notes)}</textarea></td>
-            <td><button class="btn-delete" onclick="deleteEvent('${type}', ${idx})" title="Delete"><span class="material-icons">delete</span></button></td>
+            <td><input type="date" value="${esc(ev.date)}" onchange="updateEvent('${type}',${idx},'date',this.value)"></td>
+            <td><input type="text" value="${esc(ev.name)}" placeholder="Event name..." onchange="updateEvent('${type}',${idx},'name',this.value)"></td>
+            <td><input type="text" value="${esc(ev.hero)}" placeholder="Product..." onchange="updateEvent('${type}',${idx},'hero',this.value)"></td>
+            <td><input type="text" value="${esc(ev.pmm)}" placeholder="PMM..." onchange="updateEvent('${type}',${idx},'pmm',this.value)"></td>
+            <td><input type="text" value="${esc(ev.contact)}" placeholder="Contact..." onchange="updateEvent('${type}',${idx},'contact',this.value)"></td>
+            <td><input type="text" value="${esc(ev.plan)}" placeholder="Plan..." onchange="updateEvent('${type}',${idx},'plan',this.value)"></td>
+            <td><input type="text" value="${esc(ev.activity)}" placeholder="Activity..." onchange="updateEvent('${type}',${idx},'activity',this.value)"></td>
+            <td><textarea rows="1" placeholder="Notes..." onchange="updateEvent('${type}',${idx},'notes',this.value)">${esc(ev.notes)}</textarea></td>
+            <td><button class="btn-delete" onclick="deleteEvent('${type}',${idx})" title="Delete"><span class="material-icons-outlined">delete</span></button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -269,78 +184,35 @@ function renderProducts() {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.onclick = () => showProductDetail(idx);
-        card.innerHTML = `
-            <h3>${esc(prod.name)}</h3>
-            <div class="pmm-list"><strong>PMM:</strong> ${esc(prod.pmm)}</div>
-        `;
+        card.innerHTML = `<h3>${esc(prod.name)}</h3><div class="pmm-list"><strong>PMM:</strong> ${esc(prod.pmm)}</div>`;
         grid.appendChild(card);
     });
 }
 
 function showProductDetail(idx) {
-    currentProduct = idx;
     const prod = products[idx];
     document.getElementById('product-detail-title').textContent = prod.name;
 
     const content = document.getElementById('product-detail-content');
     content.innerHTML = `
         <div class="detail-section">
-            <h3><span class="material-icons">people</span> Team</h3>
+            <h3><span class="material-icons-outlined">people</span> Team</h3>
             <div class="detail-fields">
-                <div class="detail-field">
-                    <label>PMM</label>
-                    <input type="text" value="${esc(prod.pmm)}" onchange="updateProduct(${idx}, 'pmm', this.value)">
-                </div>
-                <div class="detail-field">
-                    <label>PMM Manager</label>
-                    <input type="text" value="${esc(prod.pmmManager)}" onchange="updateProduct(${idx}, 'pmmManager', this.value)">
-                </div>
-                <div class="detail-field">
-                    <label>SME</label>
-                    <input type="text" value="${esc(prod.sme)}" onchange="updateProduct(${idx}, 'sme', this.value)">
-                </div>
-                <div class="detail-field">
-                    <label>Global Skilling</label>
-                    <input type="text" value="${esc(prod.globalSkilling)}" onchange="updateProduct(${idx}, 'globalSkilling', this.value)">
-                </div>
+                <div class="detail-field"><label>PMM</label><input value="${esc(prod.pmm)}" onchange="updateProduct(${idx},'pmm',this.value)"></div>
+                <div class="detail-field"><label>PMM Manager</label><input value="${esc(prod.pmmManager)}" onchange="updateProduct(${idx},'pmmManager',this.value)"></div>
+                <div class="detail-field"><label>SME</label><input value="${esc(prod.sme)}" onchange="updateProduct(${idx},'sme',this.value)"></div>
+                <div class="detail-field"><label>Global Skilling</label><input value="${esc(prod.globalSkilling)}" onchange="updateProduct(${idx},'globalSkilling',this.value)"></div>
             </div>
         </div>
-
         <div class="detail-section">
-            <h3><span class="material-icons">update</span> Product Updates</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name of Update</th>
-                            <th>Date</th>
-                            <th>Details</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="product-updates-body"></tbody>
-                </table>
-            </div>
-            <button class="btn-add" onclick="addProductUpdate(${idx})"><span class="material-icons">add</span> Add Update</button>
+            <h3><span class="material-icons-outlined">update</span> Product Updates</h3>
+            <div class="table-container"><table><thead><tr><th>Name</th><th>Date</th><th>Details</th><th class="col-actions"></th></tr></thead><tbody id="product-updates-body"></tbody></table></div>
+            <button class="btn-primary" onclick="addProductUpdate(${idx})"><span class="material-icons-outlined">add</span> Add Update</button>
         </div>
-
         <div class="detail-section">
-            <h3><span class="material-icons">event</span> Events</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Event Name</th>
-                            <th>Location</th>
-                            <th>Date</th>
-                            <th>Plan of Record</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="product-events-body"></tbody>
-                </table>
-            </div>
-            <button class="btn-add" onclick="addProductEvent(${idx})"><span class="material-icons">add</span> Add Event</button>
+            <h3><span class="material-icons-outlined">event</span> Events</h3>
+            <div class="table-container"><table><thead><tr><th>Event Name</th><th>Location</th><th>Date</th><th>Plan of Record</th><th class="col-actions"></th></tr></thead><tbody id="product-events-body"></tbody></table></div>
+            <button class="btn-primary" onclick="addProductEvent(${idx})"><span class="material-icons-outlined">add</span> Add Event</button>
         </div>
     `;
 
@@ -353,14 +225,13 @@ function renderProductUpdates(idx) {
     const tbody = document.getElementById('product-updates-body');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const prod = products[idx];
-    (prod.updates || []).forEach((upd, ui) => {
+    (products[idx].updates || []).forEach((upd, ui) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" value="${esc(upd.name)}" onchange="updateProductSub(${idx}, 'updates', ${ui}, 'name', this.value)"></td>
-            <td><input type="date" value="${esc(upd.date)}" onchange="updateProductSub(${idx}, 'updates', ${ui}, 'date', this.value)"></td>
-            <td><textarea rows="2" onchange="updateProductSub(${idx}, 'updates', ${ui}, 'details', this.value)">${esc(upd.details)}</textarea></td>
-            <td><button class="btn-delete" onclick="deleteProductSub(${idx}, 'updates', ${ui})" title="Delete"><span class="material-icons">delete</span></button></td>
+            <td><input value="${esc(upd.name)}" placeholder="Update name..." onchange="updateProductSub(${idx},'updates',${ui},'name',this.value)"></td>
+            <td><input type="date" value="${esc(upd.date)}" onchange="updateProductSub(${idx},'updates',${ui},'date',this.value)"></td>
+            <td><textarea rows="2" placeholder="Details..." onchange="updateProductSub(${idx},'updates',${ui},'details',this.value)">${esc(upd.details)}</textarea></td>
+            <td><button class="btn-delete" onclick="deleteProductSub(${idx},'updates',${ui})"><span class="material-icons-outlined">delete</span></button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -370,15 +241,14 @@ function renderProductEvents(idx) {
     const tbody = document.getElementById('product-events-body');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const prod = products[idx];
-    (prod.events || []).forEach((ev, ei) => {
+    (products[idx].events || []).forEach((ev, ei) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" value="${esc(ev.name)}" onchange="updateProductSub(${idx}, 'events', ${ei}, 'name', this.value)"></td>
-            <td><input type="text" value="${esc(ev.location)}" onchange="updateProductSub(${idx}, 'events', ${ei}, 'location', this.value)"></td>
-            <td><input type="date" value="${esc(ev.date)}" onchange="updateProductSub(${idx}, 'events', ${ei}, 'date', this.value)"></td>
-            <td><input type="text" value="${esc(ev.plan)}" onchange="updateProductSub(${idx}, 'events', ${ei}, 'plan', this.value)"></td>
-            <td><button class="btn-delete" onclick="deleteProductSub(${idx}, 'events', ${ei})" title="Delete"><span class="material-icons">delete</span></button></td>
+            <td><input value="${esc(ev.name)}" placeholder="Event..." onchange="updateProductSub(${idx},'events',${ei},'name',this.value)"></td>
+            <td><input value="${esc(ev.location)}" placeholder="Location..." onchange="updateProductSub(${idx},'events',${ei},'location',this.value)"></td>
+            <td><input type="date" value="${esc(ev.date)}" onchange="updateProductSub(${idx},'events',${ei},'date',this.value)"></td>
+            <td><input value="${esc(ev.plan)}" placeholder="Plan..." onchange="updateProductSub(${idx},'events',${ei},'plan',this.value)"></td>
+            <td><button class="btn-delete" onclick="deleteProductSub(${idx},'events',${ei})"><span class="material-icons-outlined">delete</span></button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -389,8 +259,8 @@ function updateProduct(idx, field, value) {
     debounceSave(STORAGE_KEYS.products, products);
 }
 
-function updateProductSub(prodIdx, arrayName, subIdx, field, value) {
-    products[prodIdx][arrayName][subIdx][field] = value;
+function updateProductSub(prodIdx, arr, subIdx, field, value) {
+    products[prodIdx][arr][subIdx][field] = value;
     debounceSave(STORAGE_KEYS.products, products);
 }
 
@@ -408,15 +278,15 @@ function addProductEvent(idx) {
     renderProductEvents(idx);
 }
 
-function deleteProductSub(prodIdx, arrayName, subIdx) {
-    products[prodIdx][arrayName].splice(subIdx, 1);
+function deleteProductSub(prodIdx, arr, subIdx) {
+    products[prodIdx][arr].splice(subIdx, 1);
     saveData(STORAGE_KEYS.products, products);
-    if (arrayName === 'updates') renderProductUpdates(prodIdx);
+    if (arr === 'updates') renderProductUpdates(prodIdx);
     else renderProductEvents(prodIdx);
 }
 
 // ===== Sorting =====
-document.addEventListener('click', function (e) {
+document.addEventListener('click', function(e) {
     const th = e.target.closest('th[data-sort]');
     if (!th) return;
     const table = th.closest('table');
@@ -438,9 +308,7 @@ document.addEventListener('click', function (e) {
     dataArr.sort((a, b) => {
         const va = (a[col] || '').toString().toLowerCase();
         const vb = (b[col] || '').toString().toLowerCase();
-        if (va < vb) return currentSort.dir === 'asc' ? -1 : 1;
-        if (va > vb) return currentSort.dir === 'asc' ? 1 : -1;
-        return 0;
+        return currentSort.dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
     });
 
     saveData(key, dataArr);
@@ -451,22 +319,11 @@ document.addEventListener('click', function (e) {
 
 // ===== Stats =====
 function updateStats() {
-    const el = (id) => document.getElementById(id);
+    const el = id => document.getElementById(id);
     if (el('stat-tasks')) el('stat-tasks').textContent = tasks.filter(t => t.name).length;
     if (el('stat-events-1p')) el('stat-events-1p').textContent = events1p.length;
     if (el('stat-events-3p')) el('stat-events-3p').textContent = events3p.length;
     if (el('stat-products')) el('stat-products').textContent = products.length;
-}
-
-// ===== Utilities =====
-function esc(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function debounceSave(key, data) {
-    clearTimeout(autoSaveTimers[key]);
-    autoSaveTimers[key] = setTimeout(() => saveData(key, data), 500);
 }
 
 // ===== Open in Browser =====
@@ -476,23 +333,31 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            const orig = link.innerHTML;
-            link.innerHTML = '<span class="material-icons">check</span> URL Copied!';
-            setTimeout(() => { link.innerHTML = orig; }, 2000);
-        }).catch(() => {
-            prompt('Copy this URL to open in your browser:', url);
-        });
+            link.innerHTML = '<span class="material-icons-outlined" style="color:var(--neon-green)">check</span>';
+            setTimeout(() => { link.innerHTML = '<span class="material-icons-outlined">open_in_new</span>'; }, 2000);
+        }).catch(() => { prompt('Copy this URL:', url); });
     }
 });
 
+// ===== Greeting =====
+function setGreeting() {
+    const h = new Date().getHours();
+    const greeting = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    const el = document.getElementById('greeting-time');
+    if (el) el.textContent = greeting;
+
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
-    // Open first sidebar group
     document.querySelectorAll('.link-group-header').forEach((h, i) => {
         if (i > 0) h.classList.add('collapsed');
-        else h.classList.remove('collapsed');
     });
 
+    setGreeting();
     showPage('welcome');
-    updateStats();
 });
