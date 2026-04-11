@@ -299,7 +299,14 @@ function renderEvents(type) {
     const data = type === '1p' ? events1p : events3p;
     const tbody = document.getElementById(`events-${type}-body`);
     tbody.innerHTML = '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const threeMonths = new Date(today); threeMonths.setMonth(threeMonths.getMonth() + 3);
     data.forEach((ev, idx) => {
+        // Only show events in the next 3 months (or with no date set yet)
+        if (ev.date) {
+            const d = new Date(ev.date + 'T00:00:00');
+            if (d < today || d > threeMonths) return;
+        }
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="date" value="${esc(ev.date)}" onchange="updateEvent('${type}',${idx},'date',this.value)"></td>
@@ -546,10 +553,8 @@ document.addEventListener('click', function(e) {
 // ===== Stats & Home =====
 function updateStats() {
     const el = id => document.getElementById(id);
-    if (el('stat-tasks')) el('stat-tasks').textContent = tasks.filter(t => t.name).length;
     if (el('stat-events-1p')) el('stat-events-1p').textContent = events1p.length;
     if (el('stat-events-3p')) el('stat-events-3p').textContent = events3p.length;
-    if (el('stat-products')) el('stat-products').textContent = products.length;
     renderHomeDashboard();
 }
 
