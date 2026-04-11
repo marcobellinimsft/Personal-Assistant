@@ -10,15 +10,10 @@ const STORAGE_KEYS = {
     familyEvents: 'pa_family_events'
 };
 
-const GITHUB_REPO = 'marcobellinimsft/Personal-Assistant';
-const GITHUB_DATA_FILE = 'data.json';
-const GITHUB_BACKUP_FILE = 'data-backup.json';
-const GITHUB_BRANCH = 'main';
-let githubSha = null; // track file SHA for updates
-let githubBackupSha = null;
 let syncPending = false;
 let syncTimer = null;
 let lastSyncTime = null;
+let isAuthenticated = false;
 
 function loadData(key, defaults) {
     try {
@@ -29,9 +24,8 @@ function loadData(key, defaults) {
 
 function saveData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
-    // Also keep a localStorage backup snapshot
     saveLocalBackup();
-    scheduleSyncToGitHub();
+    scheduleSyncToServer();
 }
 
 function saveLocalBackup() {
@@ -41,12 +35,13 @@ function saveLocalBackup() {
     } catch { /* quota exceeded — ok */ }
 }
 
-function scheduleSyncToGitHub() {
+function scheduleSyncToServer() {
+    if (!isAuthenticated) return;
     syncPending = true;
     updateSyncIndicator('pending');
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => {
-        syncToGitHub().catch(err => console.error('Sync error:', err));
+        syncToServer().catch(err => console.error('Sync error:', err));
     }, 2000);
 }
 
@@ -68,112 +63,75 @@ function applyAllData(data) {
     }
 }
 
-function getGitHubToken() {
-    return localStorage.getItem('pa_github_token') || '';
-}
-
-function setGitHubToken(token) {
-    localStorage.setItem('pa_github_token', token);
-}
-
 function updateSyncIndicator(state) {
     const el = document.getElementById('sync-status');
     if (!el) return;
     const timeStr = lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : '';
     if (state === 'syncing') {
         el.innerHTML = '<span class="material-icons-outlined spin">sync</span>';
-        el.title = 'Syncing to GitHub...';
+        el.title = 'Syncing to server...';
     } else if (state === 'ok') {
         el.innerHTML = '<span class="material-icons-outlined" style="color:#86efac">cloud_done</span>';
-        el.title = 'Synced to GitHub' + (timeStr ? ' at ' + timeStr : '');
+        el.title = 'Synced' + (timeStr ? ' at ' + timeStr : '');
     } else if (state === 'pending') {
         el.innerHTML = '<span class="material-icons-outlined" style="color:#fbbf24">cloud_upload</span>';
         el.title = 'Changes pending sync...';
     } else if (state === 'error') {
         el.innerHTML = '<span class="material-icons-outlined" style="color:#f87171">cloud_off</span>';
-        el.title = 'Sync failed — check token in settings';
-    } else if (state === 'notoken') {
-        el.innerHTML = '<span class="material-icons-outlined" style="color:#888">cloud_off</span>';
-        el.title = 'No GitHub token — click settings to configure';
+        el.title = 'Sync failed';
     }
-    // Update last sync display
     const tsEl = document.getElementById('last-sync-time');
     if (tsEl) tsEl.textContent = timeStr ? 'Last sync: ' + timeStr : '';
 }
 
-async function syncToGitHub() {
-    const token = getGitHubToken();
-    if (!token) { updateSyncIndicator('notoken'); return; }
+async function syncToServer() {
+    if (!isAuthenticated) return;
     updateSyncIndicator('syncing');
     try {
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(getAllData(), null, 2))));
-        const body = {
-            message: 'Auto-sync data ' + new Date().toISOString(),
-            content: content,
-            branch: GITHUB_BRANCH
-        };
-        if (githubSha) body.sha = githubSha;
-        const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_DATA_FILE}`, {
+        const resp = await fetch('/api/data', {
             method: 'PUT',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            body: JSON.stringify(body)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getAllData())
         });
         if (resp.ok) {
             const result = await resp.json();
-            githubSha = result.content.sha;
             syncPending = false;
-            lastSyncTime = new Date().toISOString();
+            lastSyncTime = result.savedAt || new Date().toISOString();
             localStorage.setItem('pa_last_sync', lastSyncTime);
             updateSyncIndicator('ok');
-            // Also save a rolling backup to GitHub (async, don't block)
-            saveGitHubBackup();
-        } else if (resp.status === 409) {
-            // Conflict — re-fetch SHA and retry
-            await loadFromGitHub();
-            await syncToGitHub();
+        } else if (resp.status === 401) {
+            showLoginScreen();
         } else {
-            console.error('GitHub sync failed:', resp.status, await resp.text());
+            console.error('Sync failed:', resp.status);
             updateSyncIndicator('error');
         }
     } catch (err) {
-        console.error('GitHub sync error:', err);
+        console.error('Sync error:', err);
         updateSyncIndicator('error');
     }
 }
 
-async function loadFromGitHub() {
-    const token = getGitHubToken();
-    if (!token) { updateSyncIndicator('notoken'); return false; }
+async function loadFromServer() {
+    if (!isAuthenticated) return false;
     try {
-        const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_DATA_FILE}?ref=${GITHUB_BRANCH}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        const resp = await fetch('/api/data');
         if (resp.ok) {
-            const file = await resp.json();
-            githubSha = file.sha;
-            const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))));
-            const data = JSON.parse(decoded);
-            applyAllData(data);
-            updateSyncIndicator('ok');
-            return true;
-        } else if (resp.status === 404) {
-            // File doesn't exist yet — will be created on first save
-            githubSha = null;
-            updateSyncIndicator('ok');
+            const data = await resp.json();
+            if (data && Object.keys(data).length > 0 && data.tasks) {
+                applyAllData(data);
+                updateSyncIndicator('ok');
+                return true;
+            }
+            return false;
+        } else if (resp.status === 401) {
+            showLoginScreen();
             return false;
         } else {
             updateSyncIndicator('error');
             return false;
         }
     } catch (err) {
-        console.error('GitHub load error:', err);
+        console.error('Load error:', err);
         updateSyncIndicator('error');
         return false;
     }
@@ -190,45 +148,6 @@ function exportData() {
     URL.revokeObjectURL(url);
 }
 
-async function saveGitHubBackup() {
-    const token = getGitHubToken();
-    if (!token) return;
-    try {
-        // Get current backup SHA
-        if (!githubBackupSha) {
-            const check = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_BACKUP_FILE}?ref=${GITHUB_BRANCH}`, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if (check.ok) {
-                const f = await check.json();
-                githubBackupSha = f.sha;
-            }
-        }
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(getAllData(), null, 2))));
-        const body = {
-            message: 'Auto-backup ' + new Date().toISOString(),
-            content: content,
-            branch: GITHUB_BRANCH
-        };
-        if (githubBackupSha) body.sha = githubBackupSha;
-        const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_BACKUP_FILE}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            body: JSON.stringify(body)
-        });
-        if (resp.ok) {
-            const result = await resp.json();
-            githubBackupSha = result.content.sha;
-        }
-    } catch (err) {
-        console.error('Backup save error:', err);
-    }
-}
-
 function importData() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -242,7 +161,7 @@ function importData() {
                 const data = JSON.parse(ev.target.result);
                 applyAllData(data);
                 reloadAllState();
-                scheduleSyncToGitHub();
+                scheduleSyncToServer();
                 alert('Data imported successfully!');
             } catch { alert('Invalid JSON file.'); }
         };
@@ -265,27 +184,11 @@ function reloadAllState() {
 
 function showSettings() {
     const modal = document.getElementById('settings-modal');
-    const tokenInput = document.getElementById('github-token-input');
-    tokenInput.value = getGitHubToken();
     modal.style.display = 'flex';
 }
 
 function closeSettings() {
     document.getElementById('settings-modal').style.display = 'none';
-}
-
-function saveSettings() {
-    const token = document.getElementById('github-token-input').value.trim();
-    setGitHubToken(token);
-    closeSettings();
-    if (token) {
-        loadFromGitHub().then(loaded => {
-            if (loaded) reloadAllState();
-            else syncToGitHub(); // push current data if file doesn't exist
-        });
-    } else {
-        updateSyncIndicator('notoken');
-    }
 }
 
 // ===== Helpers =====
@@ -1236,41 +1139,106 @@ function renderStocks() {
     container.querySelector('.tradingview-widget-container').appendChild(script);
 }
 
+// ===== Auth =====
+async function checkAuth() {
+    try {
+        const resp = await fetch('/api/verify');
+        if (resp.ok) {
+            const data = await resp.json();
+            return data.authenticated === true;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+function showLoginScreen() {
+    isAuthenticated = false;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
+}
+
+function showApp() {
+    isAuthenticated = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-container').style.display = '';
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    const password = document.getElementById('login-password').value;
+
+    btn.disabled = true;
+    errEl.style.display = 'none';
+
+    try {
+        const resp = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        if (resp.ok) {
+            showApp();
+            await initApp();
+        } else {
+            errEl.textContent = 'Invalid password. Please try again.';
+            errEl.style.display = 'block';
+        }
+    } catch (err) {
+        errEl.textContent = 'Connection error. Please try again.';
+        errEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+}
+
+async function handleLogout() {
+    try {
+        await fetch('/api/logout', { method: 'POST' });
+    } catch { /* ignore */ }
+    showLoginScreen();
+}
+
 // ===== Init =====
-document.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
     document.querySelectorAll('.link-group-header').forEach((h, i) => {
         if (i > 0) h.classList.add('collapsed');
     });
 
-    // Restore last sync time
     lastSyncTime = localStorage.getItem('pa_last_sync');
 
-    // Try loading from GitHub first (only on fresh load, not tab switch)
-    const token = getGitHubToken();
-    if (token) {
-        const loaded = await loadFromGitHub();
-        if (loaded) reloadAllState();
-    } else {
-        updateSyncIndicator('notoken');
-    }
+    // Load data from server
+    const loaded = await loadFromServer();
+    if (loaded) reloadAllState();
 
     setGreeting();
     showPage('welcome');
     renderNews();
     renderStocks();
 
-    // Periodic auto-sync every 60 seconds (only pushes, never overwrites local)
+    // Periodic auto-sync every 60 seconds
     setInterval(() => {
-        if (syncPending) syncToGitHub();
+        if (syncPending) syncToServer();
     }, 60000);
 
-    // Sync before page close — save to localStorage backup
+    // Save to localStorage backup before page close
     window.addEventListener('beforeunload', () => {
         if (syncPending) {
             saveLocalBackup();
-            // Try one last sync (may not complete but worth trying)
-            const token = getGitHubToken();
-            if (token) syncToGitHub();
+            syncToServer();
         }
     });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const authed = await checkAuth();
+    if (authed) {
+        showApp();
+        await initApp();
+    } else {
+        showLoginScreen();
+    }
 });
