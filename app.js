@@ -98,19 +98,64 @@ function toggleGroup(el) {
     el.nextElementSibling.classList.toggle('open');
 }
 
+// ===== Task Categories & Colors =====
+const TASK_CATEGORIES = [
+    { value: 'Content', color: '#4a90d9', bg: '#eaf1fb' },
+    { value: 'GTM', color: '#e67e22', bg: '#fef5ec' },
+    { value: 'Planning', color: '#9b59b6', bg: '#f5eef8' },
+    { value: 'Sync', color: '#27ae60', bg: '#eafaf1' },
+    { value: 'Event', color: '#e74c3c', bg: '#fdedec' },
+    { value: 'Other', color: '#7f8c8d', bg: '#f2f4f4' }
+];
+
+const VENDOR_NAMES = ['Amy', 'Mindy', 'Erica'];
+
+function getCategoryInfo(cat) {
+    return TASK_CATEGORIES.find(c => c.value === cat) || TASK_CATEGORIES[5];
+}
+
+function getDateAlert(dateStr) {
+    if (!dateStr) return '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(dateStr + 'T00:00:00');
+    const diff = (due - today) / (1000 * 60 * 60 * 24);
+    if (diff < 0) return '<span class="date-alert date-overdue" title="Overdue!"><span class="material-icons-outlined">error</span></span>';
+    if (diff <= 7) return '<span class="date-alert date-soon" title="Due within a week"><span class="material-icons-outlined">warning</span></span>';
+    return '';
+}
+
+function buildCategorySelect(selected, idx) {
+    const cat = getCategoryInfo(selected);
+    return `<select class="cat-select" style="background:${cat.color};color:#fff" onchange="updateTask(${idx},'category',this.value); this.style.background=getCategoryInfo(this.value).color;">
+        ${TASK_CATEGORIES.map(c => `<option value="${c.value}" ${c.value === selected ? 'selected' : ''} style="background:#fff;color:#333">${c.value}</option>`).join('')}
+    </select>`;
+}
+
+function buildVendorSelect(selected, idx) {
+    return `<select class="vendor-select" onchange="updateTask(${idx},'vendor',this.value)">
+        <option value="" ${!selected ? 'selected' : ''}>—</option>
+        ${VENDOR_NAMES.map(v => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('')}
+    </select>`;
+}
+
 // ===== Tasks =====
 function renderTasks() {
     const tbody = document.getElementById('tasks-body');
     tbody.innerHTML = '';
     tasks.forEach((task, idx) => {
+        const cat = getCategoryInfo(task.category);
+        const alert = getDateAlert(task.date);
         const tr = document.createElement('tr');
+        tr.style.background = task.category ? cat.bg : '';
         tr.innerHTML = `
             <td class="col-check"><input type="checkbox" class="task-checkbox" onchange="completeTask(${idx})" title="Mark complete"></td>
+            <td>${buildCategorySelect(task.category || 'Other', idx)}</td>
             <td><input type="text" value="${esc(task.name)}" placeholder="Task name..." onchange="updateTask(${idx},'name',this.value)"></td>
             <td><input type="text" value="${esc(task.who)}" placeholder="Person..." onchange="updateTask(${idx},'who',this.value)"></td>
-            <td><input type="date" value="${esc(task.date)}" onchange="updateTask(${idx},'date',this.value)"></td>
+            <td class="date-cell"><input type="date" value="${esc(task.date)}" onchange="updateTask(${idx},'date',this.value)">${alert}</td>
             <td><input type="text" value="${esc(task.link)}" placeholder="Link..." onchange="updateTask(${idx},'link',this.value)"></td>
-            <td><input type="text" value="${esc(task.vendor)}" placeholder="Vendor..." onchange="updateTask(${idx},'vendor',this.value)"></td>
+            <td>${buildVendorSelect(task.vendor, idx)}</td>
+            <td><textarea rows="1" placeholder="Notes..." onchange="updateTask(${idx},'notes',this.value)">${esc(task.notes || '')}</textarea></td>
             <td><button class="btn-delete" onclick="deleteTask(${idx})" title="Delete"><span class="material-icons-outlined">delete</span></button></td>
         `;
         tbody.appendChild(tr);
@@ -165,30 +210,36 @@ function renderArchivedToggle() {
                 <table>
                     <thead>
                         <tr>
+                            <th>Category</th>
                             <th>Task Name</th>
                             <th>Who</th>
                             <th>Date Due</th>
                             <th>Completed</th>
                             <th>Link</th>
                             <th>Vendor</th>
+                            <th>Notes</th>
                             <th class="col-actions"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${archivedTasks.map((t, i) => `
-                            <tr class="archived-row">
+                        ${archivedTasks.map((t, i) => {
+                            const aCat = getCategoryInfo(t.category);
+                            return `
+                            <tr class="archived-row" style="background:${t.category ? aCat.bg : ''}">
+                                <td><span class="cat-badge" style="background:${aCat.color}">${esc(t.category || 'Other')}</span></td>
                                 <td>${esc(t.name)}</td>
                                 <td>${esc(t.who)}</td>
                                 <td>${esc(t.date)}</td>
                                 <td><span class="completed-badge">${esc(t.completedDate)}</span></td>
                                 <td>${esc(t.link)}</td>
                                 <td>${esc(t.vendor)}</td>
+                                <td>${esc(t.notes || '')}</td>
                                 <td>
                                     <button class="btn-resume" onclick="resumeTask(${i})" title="Resume task"><span class="material-icons-outlined">replay</span></button>
                                     <button class="btn-delete" onclick="deleteArchivedTask(${i})" title="Delete"><span class="material-icons-outlined">delete</span></button>
                                 </td>
-                            </tr>
-                        `).join('')}
+                            </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -204,7 +255,7 @@ function toggleArchived() {
 }
 
 function addTask() {
-    tasks.push({ id: Date.now(), name: '', who: '', date: '', link: '', vendor: '' });
+    tasks.push({ id: Date.now(), name: '', who: '', date: '', link: '', vendor: '', category: 'Other', notes: '' });
     saveData(STORAGE_KEYS.tasks, tasks);
     renderTasks();
     const inputs = document.querySelectorAll('#tasks-body tr:last-child input');
