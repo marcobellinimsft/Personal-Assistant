@@ -42,7 +42,7 @@ function scheduleSyncToServer() {
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => {
         syncToServer().catch(err => console.error('Sync error:', err));
-    }, 2000);
+    }, 1000);
 }
 
 function getAllData() {
@@ -118,6 +118,15 @@ async function loadFromServer() {
         if (resp.ok) {
             const data = await resp.json();
             if (data && Object.keys(data).length > 0 && data.tasks) {
+                // Only apply server data if it's newer than local backup
+                const localBackupTime = localStorage.getItem('pa_local_backup_time');
+                const serverTime = data._savedAt;
+                if (localBackupTime && serverTime && new Date(localBackupTime) > new Date(serverTime)) {
+                    // Local is newer — push local data to server instead
+                    updateSyncIndicator('pending');
+                    syncToServer();
+                    return false;
+                }
                 applyAllData(data);
                 updateSyncIndicator('ok');
                 return true;
@@ -1226,9 +1235,11 @@ async function initApp() {
 
     // Save to localStorage backup before page close
     window.addEventListener('beforeunload', () => {
+        saveLocalBackup();
         if (syncPending) {
-            saveLocalBackup();
-            syncToServer();
+            // Use sendBeacon for reliable sync on page close
+            const blob = new Blob([JSON.stringify(getAllData())], { type: 'application/json' });
+            navigator.sendBeacon('/api/data', blob);
         }
     });
 }

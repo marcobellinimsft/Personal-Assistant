@@ -21,8 +21,12 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(data || {});
     }
 
-    if (req.method === 'PUT') {
-        const data = req.body;
+    if (req.method === 'PUT' || req.method === 'POST') {
+        // Support both PUT (fetch) and POST (sendBeacon)
+        let data = req.body;
+        if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch { return res.status(400).json({ error: 'Invalid JSON' }); }
+        }
         if (!data || typeof data !== 'object') {
             return res.status(400).json({ error: 'Invalid data' });
         }
