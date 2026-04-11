@@ -88,10 +88,22 @@ async function syncToServer() {
     if (!isAuthenticated) return;
     updateSyncIndicator('syncing');
     try {
+        const localData = getAllData();
+        // Data loss protection: check if we'd overwrite substantial server data with empty local data
+        const localItemCount = Object.entries(STORAGE_KEYS).reduce((sum, [name]) => {
+            const arr = localData[name];
+            return sum + (Array.isArray(arr) ? arr.length : 0);
+        }, 0);
+        if (localItemCount === 0) {
+            // Don't sync completely empty data — likely a fresh/broken session
+            console.warn('Sync blocked: local data is completely empty, refusing to overwrite server');
+            updateSyncIndicator('ok');
+            return;
+        }
         const resp = await fetch('/api/data', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(getAllData())
+            body: JSON.stringify(localData)
         });
         if (resp.ok) {
             const result = await resp.json();
@@ -1262,9 +1274,16 @@ async function initApp() {
     window.addEventListener('beforeunload', () => {
         saveLocalBackup();
         if (syncPending) {
-            // Use sendBeacon for reliable sync on page close
-            const blob = new Blob([JSON.stringify(getAllData())], { type: 'application/json' });
-            navigator.sendBeacon('/api/data', blob);
+            // Data loss protection: don't sendBeacon if local data is empty
+            const data = getAllData();
+            const itemCount = Object.entries(STORAGE_KEYS).reduce((sum, [name]) => {
+                const arr = data[name];
+                return sum + (Array.isArray(arr) ? arr.length : 0);
+            }, 0);
+            if (itemCount > 0) {
+                const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                navigator.sendBeacon('/api/data', blob);
+            }
         }
     });
 }
