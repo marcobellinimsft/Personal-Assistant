@@ -35,6 +35,17 @@ module.exports = async function handler(req, res) {
         const existing = await redis.get(DATA_KEY);
         if (existing) {
             await redis.set(BACKUP_KEY, existing);
+            // Server-side per-key merge: never let an empty array overwrite a non-empty one
+            const dataKeys = ['tasks', 'archivedTasks', 'events1p', 'events3p', 'products',
+                'personalTasks', 'archivedPersonalTasks', 'familyEvents', 'financeRecords'];
+            for (const key of dataKeys) {
+                const incoming = data[key];
+                const serverVal = existing[key];
+                if ((!incoming || (Array.isArray(incoming) && incoming.length === 0))
+                    && Array.isArray(serverVal) && serverVal.length > 0) {
+                    data[key] = serverVal;
+                }
+            }
         }
 
         data._savedAt = new Date().toISOString();
