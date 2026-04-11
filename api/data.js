@@ -1,5 +1,10 @@
 const { verifyToken } = require('./_auth');
-const { kv } = require('@vercel/kv');
+const { Redis } = require('@upstash/redis');
+
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+});
 
 const DATA_KEY = 'pa_data';
 const BACKUP_KEY = 'pa_data_backup';
@@ -12,7 +17,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'GET') {
-        const data = await kv.get(DATA_KEY);
+        const data = await redis.get(DATA_KEY);
         return res.status(200).json(data || {});
     }
 
@@ -23,13 +28,13 @@ module.exports = async function handler(req, res) {
         }
 
         // Save current data as backup before overwriting
-        const existing = await kv.get(DATA_KEY);
+        const existing = await redis.get(DATA_KEY);
         if (existing) {
-            await kv.set(BACKUP_KEY, existing);
+            await redis.set(BACKUP_KEY, existing);
         }
 
         data._savedAt = new Date().toISOString();
-        await kv.set(DATA_KEY, data);
+        await redis.set(DATA_KEY, data);
 
         return res.status(200).json({ ok: true, savedAt: data._savedAt });
     }
