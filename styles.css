@@ -48,7 +48,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 8px 20px;
+    padding: 10px 22px;
     border-radius: 50px;
     font-weight: 600;
     font-size: 13px;
@@ -56,9 +56,9 @@ body {
     transition: all 0.25s ease;
     cursor: pointer;
     border: 1.5px solid;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
 }
-.neon-btn .material-icons-outlined { font-size: 17px; }
+.neon-btn .material-icons-outlined { font-size: 18px; }
 
 .neon-btn.neon-home {
     color: rgba(255,255,255,0.85);
@@ -101,6 +101,28 @@ body {
 .neon-btn.neon-green:hover {
     background: rgba(134,239,172,0.15);
     border-color: rgba(134,239,172,0.5);
+    transform: translateY(-1px);
+}
+
+.neon-btn.neon-purple {
+    color: #c4b5fd;
+    border-color: rgba(196,181,253,0.3);
+    background: rgba(196,181,253,0.06);
+}
+.neon-btn.neon-purple:hover {
+    background: rgba(196,181,253,0.15);
+    border-color: rgba(196,181,253,0.5);
+    transform: translateY(-1px);
+}
+
+.neon-btn.neon-amber {
+    color: #fbbf24;
+    border-color: rgba(251,191,36,0.3);
+    background: rgba(251,191,36,0.06);
+}
+.neon-btn.neon-amber:hover {
+    background: rgba(251,191,36,0.15);
+    border-color: rgba(251,191,36,0.5);
     transform: translateY(-1px);
 }
 
@@ -308,6 +330,7 @@ body {
     flex-shrink: 0;
 }
 .home-task-name { flex: 1; color: #1e1e2d; font-weight: 500; }
+.home-task-who { color: #888; font-size: 12px; font-style: italic; flex-shrink: 0; }
 .home-task-date {
     color: #888;
     font-size: 12px;

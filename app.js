@@ -811,6 +811,7 @@ function renderHomeDashboard() {
                 return `<div class="home-task-row">
                     <span class="urgency-dot" style="background:${u.color}" title="${u.label}"></span>
                     <span class="home-task-name">${esc(t.name)}</span>
+                    <span class="home-task-who">${esc(t.who || '')}</span>
                     <span class="home-task-date">${dateStr} ${alert}</span>
                 </div>`;
             }).join('');
