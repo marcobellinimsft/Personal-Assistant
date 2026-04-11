@@ -1210,27 +1210,34 @@ async function renderNews() {
     if (!container) return;
     container.innerHTML = '<div class="home-empty">Loading news...</div>';
     try {
-        // Use rss2json to parse RSS feeds
         const feeds = [
-            { name: 'Reuters', url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.reuters.com%2Freuters%2FtechnologyNews' },
-            { name: 'CNBC', url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.cnbc.com%2Fid%2F100727362%2Fdevice%2Frss%2Frss.html' }
+            { name: 'Google', rss: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en' },
+            { name: 'BBC', rss: 'https://feeds.bbci.co.uk/news/technology/rss.xml' }
         ];
-        const results = await Promise.allSettled(feeds.map(f => fetch(f.url).then(r => r.json())));
         const articles = [];
-        results.forEach((r, i) => {
-            if (r.status === 'fulfilled' && r.value.items) {
-                r.value.items.slice(0, 3).forEach(item => {
-                    articles.push({ title: item.title, link: item.link, source: feeds[i].name, date: item.pubDate });
+        for (const feed of feeds) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.rss)}`;
+                const resp = await fetch(proxyUrl);
+                if (!resp.ok) continue;
+                const text = await resp.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+                const items = xml.querySelectorAll('item');
+                items.forEach((item, i) => {
+                    if (i >= 4) return;
+                    const title = item.querySelector('title')?.textContent || '';
+                    const link = item.querySelector('link')?.textContent || '';
+                    const pubDate = item.querySelector('pubDate')?.textContent || '';
+                    if (title) articles.push({ title, link, source: feed.name, date: pubDate });
                 });
-            }
-        });
+            } catch { /* skip failed feed */ }
+        }
         if (articles.length === 0) {
-            container.innerHTML = '<div class="home-empty">Unable to load news</div>';
+            container.innerHTML = '<div class="home-empty">Unable to load news — <a href="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB" target="_blank" style="color:var(--accent)">open Google News</a></div>';
             return;
         }
-        // Sort by date and take top 6
-        articles.sort((a, b) => new Date(b.date) - new Date(a.date));
-        container.innerHTML = articles.slice(0, 6).map(a =>
+        container.innerHTML = articles.slice(0, 8).map(a =>
             `<a href="${esc(a.link)}" target="_blank" class="home-news-row">
                 <span class="home-news-source">${esc(a.source)}</span>
                 <span class="home-news-title">${esc(a.title)}</span>
@@ -1241,8 +1248,8 @@ async function renderNews() {
     }
 }
 
-// ===== Tech Stocks via Yahoo Finance widget =====
-function renderStocks() {
+// ===== Tech Stocks =====
+async function renderStocks() {
     const container = document.getElementById('home-stocks-list');
     if (!container) return;
     const stocks = [
@@ -1254,13 +1261,48 @@ function renderStocks() {
         { symbol: 'META', name: 'Meta' },
         { symbol: 'TSLA', name: 'Tesla' }
     ];
-    container.innerHTML = stocks.map(s =>
-        `<a href="https://finance.yahoo.com/quote/${s.symbol}" target="_blank" class="home-stock-row">
-            <span class="home-stock-symbol">${s.symbol}</span>
-            <span class="home-stock-name">${s.name}</span>
-            <span class="home-stock-chart"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fquery1.finance.yahoo.com%2Fv8%2Ffinance%2Fchart%2F${s.symbol}&query=%24.chart.result%5B0%5D.meta.regularMarketPrice&label=%24&color=blue&style=flat-square" alt="" onerror="this.style.display='none'"></span>
-        </a>`
-    ).join('');
+
+    // Try fetching live quotes from Yahoo via allorigins proxy
+    try {
+        const symbols = stocks.map(s => s.symbol).join(',');
+        const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
+        const resp = await fetch(proxyUrl);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.quoteResponse && data.quoteResponse.result) {
+                const quotes = data.quoteResponse.result;
+                container.innerHTML = stocks.map(s => {
+                    const q = quotes.find(r => r.symbol === s.symbol);
+                    if (!q) return renderStockFallback(s);
+                    const price = q.regularMarketPrice?.toFixed(2) || '—';
+                    const change = q.regularMarketChange?.toFixed(2) || '0';
+                    const pct = q.regularMarketChangePercent?.toFixed(2) || '0';
+                    const isUp = parseFloat(change) >= 0;
+                    const color = isUp ? '#22c55e' : '#ef4444';
+                    const arrow = isUp ? '▲' : '▼';
+                    return `<a href="https://finance.yahoo.com/quote/${s.symbol}" target="_blank" class="home-stock-row">
+                        <span class="home-stock-symbol">${s.symbol}</span>
+                        <span class="home-stock-name">${s.name}</span>
+                        <span class="home-stock-price">$${price}</span>
+                        <span class="home-stock-change" style="color:${color}">${arrow} ${change} (${pct}%)</span>
+                    </a>`;
+                }).join('');
+                return;
+            }
+        }
+    } catch { /* fallback below */ }
+
+    // Fallback: static links to Yahoo Finance
+    container.innerHTML = stocks.map(s => renderStockFallback(s)).join('');
+}
+
+function renderStockFallback(s) {
+    return `<a href="https://finance.yahoo.com/quote/${s.symbol}" target="_blank" class="home-stock-row">
+        <span class="home-stock-symbol">${s.symbol}</span>
+        <span class="home-stock-name">${s.name}</span>
+        <span class="home-stock-price" style="color:#888">View →</span>
+    </a>`;
 }
 
 // ===== Init =====
