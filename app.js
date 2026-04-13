@@ -1032,7 +1032,7 @@ function deleteEvent(type, idx) {
 }
 
 // ===== Work Events (unified 1P + 3P) =====
-let workEventsFilter = { type: 'all', range: '3m', search: '' };
+let workEventsFilter = { type: 'all', range: 'all', search: '' };
 
 function getAllWorkEvents() {
     const hydrate = (e, i, t) => ({
