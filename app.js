@@ -217,6 +217,7 @@ function reloadAllState() {
     familyEvents = loadData(STORAGE_KEYS.familyEvents, []);
     financeRecords = loadData(STORAGE_KEYS.financeRecords, []);
     sidebarLinks = loadData(STORAGE_KEYS.sidebarLinks, DEFAULT_SIDEBAR_LINKS);
+    migrateSidebarLinks();
     renderSidebar();
     showPage('welcome');
 }
@@ -331,10 +332,50 @@ const DEFAULT_SIDEBAR_LINKS = [
         { id: 'l-28', icon: 'calendar_month', label: 'Calendar', page: 'calendar' },
         { id: 'l-29', icon: 'sports_esports', label: 'UW-TA', url: 'https://uw-ta.onrender.com/' },
         { id: 'l-30', icon: 'auto_fix_high', label: 'Kronoscript', url: 'https://www.kronoscript.net' },
-        { id: 'l-31', icon: 'palette', label: 'Canvas', url: '#' },
+        { id: 'l-31', icon: 'palette', label: 'Canvas', url: '#' }
+    ]},
+    { id: 'g-settings', icon: 'settings', title: 'Settings', items: [
         { id: 'l-32', icon: 'link', label: 'Link Management', page: 'link-management' }
     ]}
 ];
+
+function guessIconForLink(label, url) {
+    const s = ((label || '') + ' ' + (url || '')).toLowerCase();
+    const rules = [
+        [/github/, 'code'],
+        [/youtube|youtu\.be|vimeo|video|\.mp4/, 'play_circle'],
+        [/sharepoint|:f:|folder/, 'folder_shared'],
+        [/onenote|\.one/, 'note'],
+        [/loop\.cloud/, 'loop'],
+        [/onedrive|drive\.google/, 'cloud'],
+        [/mail|outlook/, 'mail'],
+        [/teams\.microsoft/, 'groups'],
+        [/calendar/, 'calendar_month'],
+        [/\.pptx|slideshow|deck|presentation/, 'slideshow'],
+        [/\.xlsx|\.xls|spreadsheet|sheets/, 'table_chart'],
+        [/\.docx|\.doc|\.pdf|document/, 'description'],
+        [/learn\.microsoft|microsoft learn/, 'menu_book'],
+        [/linkedin/, 'business_center'],
+        [/twitter|\bx\.com/, 'tag'],
+        [/facebook/, 'thumb_up'],
+        [/bank|finance|money|pay/, 'account_balance'],
+        [/news|bbc|wsj|times|corriere|gazzetta/, 'newspaper'],
+        [/shop|amazon|cart|store/, 'shopping_cart'],
+        [/music|spotify|apple\.com\/music/, 'music_note'],
+        [/map|maps\.google/, 'map'],
+        [/game|play|xbox|playstation|nintendo/, 'sports_esports'],
+        [/school|university|\.edu|washington/, 'school'],
+        [/health|medical|doctor|hospital/, 'medical_services'],
+        [/chart|report|dashboard|powerbi|msit/, 'bar_chart'],
+        [/plan|roadmap|track/, 'edit_calendar'],
+        [/search|google\.com|bing/, 'search'],
+        [/wiki/, 'menu_book'],
+        [/blog|substack|medium/, 'edit_note'],
+        [/settings|admin|config/, 'settings']
+    ];
+    for (const [re, icon] of rules) if (re.test(s)) return icon;
+    return 'link';
+}
 
 // ===== Task Categories & Colors =====
 const TASK_CATEGORIES = [
@@ -1506,14 +1547,32 @@ function linkMove(fromGroupId, itemId, toGroupId) {
 function linkAdd(groupId) {
     const label = (document.getElementById('new-label-' + groupId) || {}).value || '';
     const url = (document.getElementById('new-url-' + groupId) || {}).value || '';
-    const icon = (document.getElementById('new-icon-' + groupId) || {}).value || 'link';
+    const iconInput = ((document.getElementById('new-icon-' + groupId) || {}).value || '').trim();
     if (!label.trim() || !url.trim()) { alert('Label and URL are required.'); return; }
+    const icon = iconInput && iconInput !== 'link' ? iconInput : guessIconForLink(label, url);
     const g = sidebarLinks.find(x => x.id === groupId);
     if (!g) return;
-    g.items.push({ id: 'l-' + Date.now(), icon: icon.trim(), label: label.trim(), url: url.trim() });
+    g.items.push({ id: 'l-' + Date.now(), icon, label: label.trim(), url: url.trim() });
     saveData(STORAGE_KEYS.sidebarLinks, sidebarLinks);
     renderSidebar();
     renderLinkManagement();
+}
+
+function migrateSidebarLinks() {
+    let changed = false;
+    const personal = sidebarLinks.find(g => g.id === 'g-personal');
+    if (personal) {
+        const i = personal.items.findIndex(it => it.id === 'l-32' || it.page === 'link-management');
+        if (i >= 0) { personal.items.splice(i, 1); changed = true; }
+    }
+    if (!sidebarLinks.find(g => g.id === 'g-settings')) {
+        sidebarLinks.push({
+            id: 'g-settings', icon: 'settings', title: 'Settings',
+            items: [{ id: 'l-32', icon: 'link', label: 'Link Management', page: 'link-management' }]
+        });
+        changed = true;
+    }
+    if (changed) saveData(STORAGE_KEYS.sidebarLinks, sidebarLinks);
 }
 
 function updateFinanceAmount(idx, type, value) {
@@ -1931,6 +1990,7 @@ async function handleLogout() {
 
 // ===== Init =====
 async function initApp() {
+    migrateSidebarLinks();
     renderSidebar();
 
     lastSyncTime = localStorage.getItem('pa_last_sync');
