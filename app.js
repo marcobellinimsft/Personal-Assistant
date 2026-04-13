@@ -1318,7 +1318,7 @@ function renderProducts() {
             card.innerHTML = `
                 <h3>${esc(prod.name)}</h3>
                 ${managerBubbles ? `<div class="card-label">Manager${managerNames.length > 1 ? 's' : ''}</div><div class="bubble-wrap" style="margin-bottom:10px">${managerBubbles}</div>` : ''}
-                <div class="card-label">Who</div>
+                <div class="card-label">PMMs</div>
                 <div class="bubble-wrap">${renderBubbles(pmmNames, idx, 'pmm')}</div>
             `;
             inner.appendChild(card);
