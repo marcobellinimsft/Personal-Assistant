@@ -1305,19 +1305,19 @@ function renderProducts() {
         section.appendChild(inner);
         catProducts.forEach(({ p: prod, i: idx }) => {
             const pmmNames = getPmmList(prod.pmm);
-            const managerName = prod.pmmManager || '';
+            const managerNames = getPmmList(prod.pmmManager || '');
             const color = getProductColor(idx);
             const card = document.createElement('div');
             card.className = 'product-card';
             card.style.background = color.bg;
             card.style.borderColor = color.dark + '33';
             card.onclick = () => showProductDetail(idx);
-            const managerBubble = managerName
-                ? `<span class="bubble" style="background:${color.dark};color:#fff;font-weight:600">${esc(managerName)}<button class="bubble-x" onclick="event.stopPropagation(); removeManager(${idx})" title="Remove manager">&times;</button></span>`
-                : '';
+            const managerBubbles = managerNames.map((name, mi) =>
+                `<span class="bubble" style="background:${color.dark};color:#fff;font-weight:600">${esc(name)}<button class="bubble-x" onclick="event.stopPropagation(); removeManager(${idx},${mi})" title="Remove manager">&times;</button></span>`
+            ).join('');
             card.innerHTML = `
                 <h3>${esc(prod.name)}</h3>
-                ${managerBubble ? `<div class="card-label">Manager</div><div class="bubble-wrap" style="margin-bottom:10px">${managerBubble}</div>` : ''}
+                ${managerBubbles ? `<div class="card-label">Manager${managerNames.length > 1 ? 's' : ''}</div><div class="bubble-wrap" style="margin-bottom:10px">${managerBubbles}</div>` : ''}
                 <div class="card-label">Who</div>
                 <div class="bubble-wrap">${renderBubbles(pmmNames, idx, 'pmm')}</div>
             `;
@@ -1345,14 +1345,19 @@ function addManagerToProduct() {
     const idx = parseInt(sel.value);
     const name = input.value.trim();
     if (isNaN(idx) || !name) return;
-    products[idx].pmmManager = name;
+    const list = getPmmList(products[idx].pmmManager || '');
+    list.push(name);
+    products[idx].pmmManager = list.join(', ');
     saveData(STORAGE_KEYS.products, products);
     input.value = '';
     renderProducts();
 }
 
-function removeManager(idx) {
-    products[idx].pmmManager = '';
+function removeManager(idx, nameIdx) {
+    const list = getPmmList(products[idx].pmmManager || '');
+    if (typeof nameIdx === 'number') list.splice(nameIdx, 1);
+    else list.length = 0;
+    products[idx].pmmManager = list.join(', ');
     saveData(STORAGE_KEYS.products, products);
     renderProducts();
 }
