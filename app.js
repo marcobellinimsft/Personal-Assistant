@@ -532,7 +532,6 @@ function renderTasks() {
         if (task.hidden) tr.style.opacity = '0.45';
         tr.innerHTML = `
             <td class="col-check"><input type="checkbox" class="task-checkbox" onchange="completeTask(${idx})" title="Mark complete"></td>
-            <td class="col-check"><input type="checkbox" ${task.hidden ? 'checked' : ''} onchange="toggleTaskHidden(${idx})" title="Hide row"></td>
             <td>${buildUrgencySelect(task.urgency || '4', idx)}</td>
             <td>${buildCategorySelect(task.category || 'Other', idx)}</td>
             <td><input type="text" value="${esc(task.name)}" placeholder="Task name..." onchange="updateTask(${idx},'name',this.value)"></td>
@@ -542,6 +541,7 @@ function renderTasks() {
             <td>${buildVendorSelect(task.vendor, idx)}</td>
             <td><textarea rows="1" placeholder="Notes..." onchange="updateTask(${idx},'notes',this.value)">${esc(task.notes || '')}</textarea></td>
             <td><button class="btn-delete" onclick="deleteTask(${idx})" title="Delete"><span class="material-icons-outlined">delete</span></button></td>
+            <td class="col-check"><input type="checkbox" ${task.hidden ? 'checked' : ''} onchange="toggleTaskHidden(${idx})" title="Hide row"></td>
         `;
         tbody.appendChild(tr);
     });
@@ -1875,12 +1875,15 @@ function renderHomeDashboard() {
     // Upcoming events (next 3 months, combined 1P + 3P)
     const threeMonths = new Date(today);
     threeMonths.setMonth(threeMonths.getMonth() + 3);
-    const allEvents = [...events1p.map(e => ({...e, type:'1P'})), ...events3p.map(e => ({...e, type:'3P'}))];
+    const allEvents = [
+        ...events1p.map(e => ({...e, type:'1P', anchor: e.dateFrom || e.date})),
+        ...events3p.map(e => ({...e, type:'3P', anchor: e.dateFrom || e.date}))
+    ];
     const upcoming = allEvents.filter(e => {
-        if (!e.date || !e.name) return false;
-        const d = new Date(e.date + 'T00:00:00');
+        if (!e.anchor || !e.name) return false;
+        const d = new Date(e.anchor + 'T00:00:00');
         return d >= today && d <= threeMonths;
-    }).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    }).sort((a, b) => (a.anchor || '').localeCompare(b.anchor || ''));
 
     const eventsList = document.getElementById('home-events-list');
     if (eventsList) {
@@ -1888,11 +1891,14 @@ function renderHomeDashboard() {
             eventsList.innerHTML = '<div class="home-empty">No events in the next 3 months</div>';
         } else {
             eventsList.innerHTML = upcoming.map(e => {
-                const dateStr = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'});
+                const dateStr = new Date(e.anchor + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'});
                 const pri = getEventPriorityInfo(e.priority || 'P3');
+                const badgeStyle = e.type === '1P'
+                    ? 'background:#e67e22;color:#fff;border:none'
+                    : 'background:#fff3cd;color:#856404;border:1px solid #ffeaa7';
                 return `<div class="home-event-row">
                     <span class="urgency-dot" style="background:${pri.color}" title="${pri.label}"></span>
-                    <span class="home-event-badge">${e.type}</span>
+                    <span class="home-event-badge" style="${badgeStyle};font-weight:700;padding:2px 8px;border-radius:10px;font-size:10px">${e.type}</span>
                     <span class="home-event-name">${esc(e.name)}</span>
                     <span class="home-event-date">${dateStr}</span>
                 </div>`;
